@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Capture for Attendance</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Global Styles */
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #f4f7fc;
+        margin: 0;
+        padding: 0;
+        color: black; /* Changed font color to black */
+      }
+
+      /* Navbar */
+      .navbar {
+        background-color: #4a90e2; /* Dimmed blue color */
+        padding: 15px;
+        color: white;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        margin: 0 15px;
+      }
+
+      .navbar a:hover {
+        text-decoration: underline;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #1a73e8;
+        font-weight: 500;
+        margin-bottom: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        font-weight: 500;
+        color: black; /* Changed label color to black */
+      }
+
+      input,
+      button,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        margin-top: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #1a73e8;
+        color: white;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+        padding: 14px;
+        font-size: 18px;
+      }
+
+      button:hover {
+        background-color: #0d47a1;
+      }
+
+      #videoElement {
+        width: 100%;
+        height: 200px;
+        border-radius: 6px;
+        border: 2px solid #ddd;
+        margin-top: 15px;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      #captureButton,
+      #captureAgainButton,
+      #submitButton {
+        width: 100%;
+        margin-top: 15px;
+        font-size: 18px;
+        padding: 12px;
+      }
+
+      #captureAgainButton {
+        background-color: #ff9800;
+      }
+
+      #submitButton {
+        background-color: #1a73e8;
+      }
+
+      #resultDiv {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 6px;
+        display: none;
+      }
+
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      #lateReasonSection {
+        display: none;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+      }
+
+      /* Mobile responsive adjustments */
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px;
+          margin: 15px;
+        }
+
+        button {
+          padding: 14px;
+          font-size: 16px;
+        }
+
+        h1 {
+          font-size: 22px;
+        }
+
+        #videoElement {
+          width: 100%;
+        }
+      }
+
+      /* Tablet responsive adjustments */
+      @media (min-width: 600px) and (max-width: 768px) {
+        h1 {
+          font-size: 24px;
+        }
+
+        button {
+          padding: 16px;
+          font-size: 17px;
+        }
+
+        #videoElement {
+          width: 90%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <div class="navbar">
+      <span>Attendance System</span>
+    </div>
+
+    <div class="container">
+      <h1>Face Capture for Attendance</h1>
+
+      <form id="attendanceForm">
+        <div class="form-group">
+          <label for="user_name">User Name:</label>
+          <input
+            type="text"
+            id="user_name"
+            name="user_name"
+            required
+            placeholder="Enter your name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="user_id">User ID:</label>
+          <input
+            type="text"
+            id="user_id"
+            name="user_id"
+            required
+            placeholder="Enter your user ID"
+          />
+        </div>
+
+        <!-- Hidden input to store captured image -->
+        <input type="hidden" id="image_data" name="image_data" />
+
+        <!-- Video element for capturing face -->
+        <div class="form-group">
+          <video id="videoElement" autoplay></video>
+        </div>
+
+        <div class="form-group">
+          <button type="button" id="captureButton">Capture Face</button>
+          <button type="button" id="captureAgainButton" style="display: none">
+            Capture Again
+          </button>
+          <button type="submit" id="submitButton" style="display: none">
+            Submit Attendance
+          </button>
+        </div>
+
+        <!-- Late Reason Section (Initially Hidden) -->
+        <div id="lateReasonSection" class="form-group">
+          <label for="late_reason">Reason for Being Late:</label>
+          <textarea
+            id="late_reason"
+            name="late_reason"
+            rows="4"
+            placeholder="Provide a reason (if late)"
+          ></textarea>
+        </div>
+      </form>
+
+      <!-- Display Result Messages Here -->
+      <div id="resultDiv"></div>
+    </div>
+
+    <script>
+      const videoElement = document.getElementById("videoElement");
+      const captureButton = document.getElementById("captureButton");
+      const captureAgainButton = document.getElementById("captureAgainButton");
+      const submitButton = document.getElementById("submitButton");
+      const resultDiv = document.getElementById("resultDiv");
+      const lateReasonSection = document.getElementById("lateReasonSection");
+
+      let currentTime = new Date().toISOString().slice(11, 19);
+      const allowedStart = "08:00:00";
+      const allowedEnd = "08:15:00";
+
+      // Check if user is late and show the late reason input if necessary
+      function checkLateStatus() {
+        if (currentTime < allowedStart || currentTime > allowedEnd) {
+          lateReasonSection.style.display = "block";
+        } else {
+          lateReasonSection.style.display = "none";
+        }
+      }
+
+      checkLateStatus(); // Check if user is late on page load
+
+      // Start video streaming
+      async function startVideo() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          videoElement.srcObject = stream;
+        } catch (err) {
+          console.error("Error accessing the camera: ", err);
+          resultDiv.innerHTML =
+            "<div class='alert-error'>Could not access camera.</div>";
+          resultDiv.style.display = "block";
+        }
+      }
+
+      startVideo(); // Start video streaming on page load
+
+      // Capture face and stop video
+      captureButton.addEventListener("click", async () => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+        // Convert captured image to base64
+        const image_data = canvas.toDataURL("image/jpeg");
+
+        // Set hidden field with image data
+        document.getElementById("image_data").value = image_data;
+
+        // Stop video streaming
+        const stream = videoElement.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+
+        // Hide Capture and Show Capture Again
+        captureButton.style.display = "none";
+        captureAgainButton.style.display = "block";
+        submitButton.style.display = "inline-block";
+      });
+
+      // Capture Again functionality
+      captureAgainButton.addEventListener("click", () => {
+        startVideo(); // Restart video streaming
+        captureButton.style.display = "block"; // Show capture button again
+        captureAgainButton.style.display = "none"; // Hide Capture Again button
+        submitButton.style.display = "none"; // Hide submit button
+        resultDiv.style.display = "none"; // Hide result message
+      });
+
+      // Handle form submission
+      document
+        .getElementById("attendanceForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const imageData = document.getElementById("image_data").value;
+
+          if (!imageData) {
+            resultDiv.innerHTML =
+              "<div class='alert-error'>Please capture your face before submitting.</div>";
+            resultDiv.style.display = "block";
+            return;
+          }
+
+          const response = await fetch("/submit_attendance", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (data.status === "success") {
+            resultDiv.innerHTML =
+              "<div class='alert-success'>Attendance marked successfully!</div>";
+          } else {
+            resultDiv.innerHTML =
+              "<div class='alert-error'>" + data.message + "</div>";
+          }
+          resultDiv.style.display = "block";
+        });
+    </script>
+  </body>
+</html>
